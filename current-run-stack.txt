@@ -1,0 +1,205 @@
+Process 39120: "F:\Programme\KiCad\bin\pythonw.exe" C:\Users\Anercomp\Documents\KiCad\9.0\3rdparty\plugins\com_github_kbralten_kipida\launch.py
+Python v3.11.5 (F:\Programme\KiCad\bin\pythonw.exe)
+
+Thread 49384 (active): "MainThread"
+    cg (cupyx\scipy\sparse\linalg\_iterative.py:80)
+        Arguments:
+            A: <_CustomLinearOperator at 0x29217120750>
+            b: <ndarray at 0x292139f3250>
+            x0: None
+        Locals:
+            rtol: 0.0000000001
+            atol: 0.00000000042629732704224156
+            maxiter: 24334
+            M: <_CustomLinearOperator at 0x29217120fd0>
+            callback: <function at 0x2927ed998a0>
+            x: <ndarray at 0x292152fc160>
+            matvec: <method at 0x292171227c0>
+            psolve: <method at 0x29217120b40>
+            n: 4112165
+            b_norm: <ndarray at 0x292152fc3a0>
+            r: <ndarray at 0x292152fc4c0>
+            iters: 6085
+            rho: <ndarray at 0x292152fc5e0>
+            z: <ndarray at 0x292152fcaf0>
+            rho1: <ndarray at 0x292139f31c0>
+            p: <ndarray at 0x292152fc310>
+            beta: <ndarray at 0x292152fca60>
+            q: <ndarray at 0x292152fc0d0>
+            alpha: <ndarray at 0x292152fc1f0>
+            resid: <ndarray at 0x292152fc790>
+    solve_reduced (com_github_kbralten_kipida\solver_backend.py:37)
+        Arguments:
+            matrix: <csr_matrix at 0x292171226d0>
+            rhs: <numpy.ndarray at 0x29208f8c8d0>
+            backend: "auto"
+            log: <cell at 0x2927b69dfc0>
+        Locals:
+            notes: []
+            diagonal: <numpy.ndarray at 0x29208f8c510>
+            count: <function at 0x2927ed998a0>
+            maximum: 24334
+            cp: <module at 0x2927ed08fe0>
+            csr_matrix: <type at 0x29208413400>
+            cg: <function at 0x292152393a0>
+            LinearOperator: <type at 0x292084124c0>
+            free: 11597250560
+            _: 12884377600
+            required: 1311859156
+            gpu_matrix: <csr_matrix at 0x29217120d10>
+            gpu_rhs: <ndarray at 0x292139f2f80>
+            preconditioner: <_CustomLinearOperator at 0x29217120fd0>
+    solve (com_github_kbralten_kipida\electrical_solver.py:98)
+        Arguments:
+            self: <Solver at 0x2927ed7bb50>
+            mesh: <Mesh at 0x2927b60c850>
+            sources: [{"node_id": 129707, "voltage": 12}]
+            loads: [{"node_id": 594662, "current": 4.262973270422416}]
+        Locals:
+            compact: True
+            n: 4112176
+            rows: <numpy.ndarray at 0x292152a3e10>
+            cols: <numpy.ndarray at 0x2927b653450>
+            g: <csr_matrix at 0x2927ed75650>
+            b: <numpy.ndarray at 0x29208f8c8d0>
+            asymmetry: <csr_matrix at 0x2927ed5ead0>
+            source: {"node_id": 129707, "voltage": 12}
+            nid: 594662
+            value: 12
+            i: 129707
+            rhs: <numpy.ndarray at 0x2927b652f10>
+            load: {"node_id": 594662, "current": 4.262973270422416}
+            current: 4.262973270422416
+            count: 11
+            labels: <numpy.ndarray at 0x29208f8c210>
+            powered: <set at 0x292170c84a0>
+            excluded: 10
+            fixed_indices: <numpy.ndarray at 0x29208f8cd50>
+            is_free: <numpy.ndarray at 0x29208f8c810>
+            free: <numpy.ndarray at 0x29208f8c630>
+            reference: <numpy.ndarray at 0x29208f8ccf0>
+            baseline: <numpy.ndarray at 0x29208f8c4b0>
+            backend_diagnostics: {"backend": "boundary only", "iterations": 0, "solve_seconds": 0}
+            reduced: <csr_matrix at 0x292171226d0>
+    solve_group (com_github_kbralten_kipida\network_solver.py:145)
+        Arguments:
+            meshes: <cell at 0x2927b69e740>
+            links: [<SeriesComponent at 0x2927b6a3c90>, <SeriesComponent at 0x2927b6a5e50>]
+            sources: [("+12V_PSU", "J7", ["4", "5", "6"], 12)]
+            loads: [("+12V", "IC1", ["2", "12"], 4.262973270422416)]
+            resolve: <cell at 0x2927b69e080>
+            log: <method at 0x2927ee81680>
+            backend: "auto"
+        Locals:
+            contacts: [(<SeriesComponent at 0x2927b6a3c90>, 35279, 4064288), (<SeriesComponent at 0x2927b6a5e50>, 4078030, 570437)]
+            seen: <set at 0x2927b6c67a0>
+            link: <SeriesComponent at 0x2927b6a5e50>
+            key: <frozenset at 0x292170c83c0>
+            mapped_sources: [(131806, 12)]
+            mapped_loads: [(639724, 4.262973270422416)]
+            before: <numpy.ndarray at 0x292152a3f30>
+            a: 4078030
+            b: 570437
+            unique: <numpy.ndarray at 0x2927b653810>
+            combined: <Mesh at 0x2927b60c850>
+            edges: {"+12V_PSU": <EdgeArrays at 0x2927ed7be90>, "+12V": <EdgeArrays at 0x2927ed7bf50>, ...}
+            net: "Net-(D2-A)"
+            items: <EdgeArrays at 0x2927ed7b310>
+            u: <numpy.ndarray at 0x292152a0390>
+            v: <numpy.ndarray at 0x292152a03f0>
+            solver: <Solver at 0x2927ed7bb50>
+    solve (com_github_kbralten_kipida\network_solver.py:269)
+        Arguments:
+            root: "+12V_PSU"
+        Locals:
+            sources: [("+12V_PSU", "J7", ["4", "5", "6"], 12)]
+            loads: []
+            incoming: []
+            outgoing: [<VoltageRegulator at 0x2927b687810>]
+            upstream: "+12V_PSU"
+            downstream: "+8.5V"
+            source_voltage: 12
+            input_currents: [4.262973270422416]
+            current: 5.649999999779457
+            local_links: [<SeriesComponent at 0x2927b6a3c90>, <SeriesComponent at 0x2927b6a5e50>]
+            iteration: 18
+            regulator_loads: [("+12V", "IC1", ["2", "12"], 4.262973270422416)]
+            data: {...}
+            parts: [...]
+            updated: [4.262973291594054]
+            old: 4.262973249250777
+            nodes: [75983, 75984, 75985, 75986, 75987, 75988, 75989, 75990, 75991, 75992, 75993, 75994, 75995, 75996, 75997, 75998, 75999, ...]
+            vin: 11.984692850565896
+    solve_system (com_github_kbralten_kipida\network_solver.py:303)
+        Arguments:
+            rails: [<PowerRail at 0x2927b32f2d0>, <PowerRail at 0x2927b6a4290>, <PowerRail at 0x2927b6a4410>, <PowerRail at 0x2927b6a4550>, ...]
+            meshes: <cell at 0x29213993910>
+            resolve: <cell at 0x2927b69e290>
+            log: <cell at 0x2927b69dde0>
+            backend: <cell at 0x2927b69dea0>
+            progress: <cell at 0x2927b69dcc0>
+        Locals:
+            link: <SeriesComponent at 0x2927b6a5e50>
+            net: "Net-(D2-A)"
+            root: "+12V_PSU"
+    run (com_github_kbralten_kipida\ui\main_dialog.py:496)
+        Arguments:
+            step: <cell at 0x2927b6f1ff0>
+            start: <cell at 0x2927b6f1d80>
+            end: <cell at 0x2927b6f1f60>
+            retained_bytes: 195794384
+        Locals:
+            estimates: [(1996696, 484142160), (23480640, 3094599200), (246036, 41121960), (830688, 47006080), (492984, 93282640)]
+            estimated: 3955946424
+            mesher: <Mesher at 0x2925b43c6d0>
+            meshes: {"+12V_PSU": <Mesh at 0x2927ed16ed0>, "+12V": <Mesh at 0x2927b65d510>, "+8.5V_PS2": <Mesh at 0x2927ed23150>, ...}
+            total: 27047044
+            completed: 27047044
+            net: "Net-(D2-A)"
+            geo: {3: <Polygon at 0x2927ed78fc0>, 34: <MultiPolygon at 0x2927ed782c0>, 4: <MultiPolygon at 0x2927ed7a840>, ...}
+            estimate: (492984, 93282640)
+            base: 0.981773091358893
+            weight: 0.018226908641106956
+    on_run (com_github_kbralten_kipida\ui\main_dialog.py:505)
+        Arguments:
+            self: <cell at 0x2927b6686d0>
+            event: <CommandEvent at 0x2927ab25fc0>
+        Locals:
+            default_budget_gb: <function at 0x2923c0fab60>
+            name: "power_tree"
+            control: <PowerTreePanel at 0x2927b57b880>
+            rail: <PowerRail at 0x2927b6a5d10>
+            link: <SeriesComponent at 0x2927b6a5e50>
+            reg: <VoltageRegulator at 0x2927b687810>
+            extractor: <GeometryExtractor at 0x2927b602ed0>
+            spacing: 0.1
+            index: 4
+            memory_control: <TextCtrl at 0x2927b6992d0>
+            backend_control: <Choice at 0x2927b6991b0>
+            thermal_control: <CheckBox at 0x2927b6993f0>
+            electrical_end: 70
+            refinement: True
+            coarse_end: 22
+            run: <function at 0x2927b683f60>
+            results: {"+8.5V_PS2": {"mesh": <Mesh at 0x2927b5b1050>, "results": <Voltages at 0x2927b76dfd0>, ...}, "+8.5V": {...}, ...}
+            parts: [{"ref": "R38", "net_a": "+8.5V", "net_b": "+8.5V_PS2", "closed": True, "current_a": 5.650000000063335, ...}, {...}, ...]
+            status: "unchecked"
+            retained: 195794384
+    main (com_github_kbralten_kipida\ipc_entry.py:55)
+        Locals:
+            app: <App at 0x2927b57ae60>
+            client: <KiCad at 0x2927b610510>
+            board: <Board at 0x2927b647d50>
+            project: <types.SimpleNamespace at 0x2927b66a650>
+            document: <DocumentSpecifier at 0x2927b56e2a0>
+            info: <ProjectSpecifier at 0x2927b5ff3d0>
+            path: "C:\Users\Anercomp\Desktop\KICad\PowerCreep"
+            old_streams: (None, None)
+            show_dialog: <function at 0x2927b683b00>
+    run (com_github_kbralten_kipida\launch.py:20)
+        Locals:
+            log_path: <WindowsPath at 0x2923b2339a0>
+            original_streams: (None, None)
+            ipc_entry: <module at 0x2923b2635b0>
+    <module> (com_github_kbralten_kipida\launch.py:37)
+Thread 41184 (idle)

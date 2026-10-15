@@ -1,0 +1,74 @@
+{
+  "nodes": 262144,
+  "backend": "gpu",
+  "preconditioners": {
+    "jacobi": [
+      {
+        "backend": "CUDA CG",
+        "preconditioner": "Jacobi",
+        "iterations": 2065,
+        "solve_seconds": 2.4042326000053436,
+        "backend_notes": [],
+        "warm_start": false,
+        "rhs_solve": 1,
+        "matrix_reused": false,
+        "setup_seconds": 0.6863113000290468,
+        "rhs_transfer_seconds": 0.0013865000219084322,
+        "iteration_seconds": 1.7124305000179447,
+        "validation_seconds": 0.004015300015453249,
+        "gpu": "NVIDIA GeForce RTX 3080 Ti",
+        "maximum_analytical_error_v": 3.671007942074311e-12
+      },
+      {
+        "backend": "CUDA CG",
+        "preconditioner": "Jacobi",
+        "iterations": 1160,
+        "solve_seconds": 0.9583949000225402,
+        "backend_notes": [],
+        "warm_start": true,
+        "rhs_solve": 2,
+        "matrix_reused": true,
+        "setup_seconds": 1.6600009985268116e-05,
+        "rhs_transfer_seconds": 0.0010474000009708107,
+        "iteration_seconds": 0.9535022000200115,
+        "validation_seconds": 0.0035170999472029507,
+        "gpu": "NVIDIA GeForce RTX 3080 Ti",
+        "maximum_analytical_error_v": 1.2566059304219834e-11
+      }
+    ],
+    "amg": [
+      {
+        "backend": "CUDA CG",
+        "preconditioner": "AMG V-cycle",
+        "iterations": 19,
+        "solve_seconds": 6.7074322999687865,
+        "backend_notes": [],
+        "warm_start": false,
+        "rhs_solve": 1,
+        "matrix_reused": false,
+        "setup_seconds": 1.6256711999885738,
+        "rhs_transfer_seconds": 0.0015069000073708594,
+        "iteration_seconds": 5.075573100009933,
+        "validation_seconds": 0.004565400013234466,
+        "gpu": "NVIDIA GeForce RTX 3080 Ti",
+        "maximum_analytical_error_v": 1.0788592241794959e-12
+      },
+      {
+        "backend": "CUDA CG",
+        "preconditioner": "AMG V-cycle",
+        "iterations": 9,
+        "solve_seconds": 0.08300380001310259,
+        "backend_notes": [],
+        "warm_start": true,
+        "rhs_solve": 2,
+        "matrix_reused": true,
+        "setup_seconds": 8.300004992634058e-06,
+        "rhs_transfer_seconds": 0.0011499000247567892,
+        "iteration_seconds": 0.07862509996630251,
+        "validation_seconds": 0.0029959999956190586,
+        "gpu": "NVIDIA GeForce RTX 3080 Ti",
+        "maximum_analytical_error_v": 1.6030510252562635e-12
+      }
+    ]
+  }
+}

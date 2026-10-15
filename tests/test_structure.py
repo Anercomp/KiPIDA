@@ -21,7 +21,8 @@ class TestPluginStructure(unittest.TestCase):
             import extractor
             import mesh
             import solver
-            import plugin
+            import electrical_solver
+            import copper_geometry
         except ImportError as e:
             self.fail(f"Failed to import Core Modules: {e}")
         
@@ -29,6 +30,7 @@ class TestPluginStructure(unittest.TestCase):
         """test that the UI modules can be imported (requires wx)"""
         try:
             import wx
+            import wx.dataview
         except ImportError:
             self.skipTest("wxPython not available")
 

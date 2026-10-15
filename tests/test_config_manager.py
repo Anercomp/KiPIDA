@@ -78,7 +78,7 @@ class TestConfigManager(unittest.TestCase):
             with open(filepath, 'r') as f:
                 data = json.load(f)
             
-            self.assertEqual(data["version"], "1.0")
+            self.assertEqual(data["version"], "1.1")
             self.assertEqual(len(data["rails"]), 3)
             
             # Verify 12V rail

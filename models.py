@@ -54,6 +54,17 @@ class VoltageRegulator:
     efficiency: float = 0.85  # Only used if SWITCHING. 0.0-1.0
 
 @dataclass
+class SeriesComponent:
+    ref_des: str
+    net_a: str
+    pad_a: str
+    net_b: str
+    pad_b: str
+    resistance_ohm: float = 0.0
+    kind: str = "Fuse"
+    closed: bool = True
+
+@dataclass
 class PowerRail:
     """
     High-level representation of a power domain.
@@ -64,6 +75,7 @@ class PowerRail:
     loads: List[UnifiedLoad] = field(default_factory=list)
     # Regulators where this rail is the INPUT
     child_regulators: List[VoltageRegulator] = field(default_factory=list)
+    series_components: List[SeriesComponent] = field(default_factory=list)
     
     def add_source(self, source: UnifiedSource):
         self.sources.append(source)
@@ -73,6 +85,25 @@ class PowerRail:
     
     def add_child_regulator(self, reg: VoltageRegulator):
         self.child_regulators.append(reg)
+
+def series_links_for_rail(rails, net_name):
+    """Return the selected rail's complete series chain, retaining edit owners.
+
+    Open links remain visible so users can configure the entire path.
+    """
+    records = [(owner, link) for owner in rails for link in owner.series_components]
+    adjacent = {}
+    for _, link in records:
+        adjacent.setdefault(link.net_a, set()).add(link.net_b)
+        adjacent.setdefault(link.net_b, set()).add(link.net_a)
+    connected, pending = {net_name}, [net_name]
+    while pending:
+        for neighbour in adjacent.get(pending.pop(), ()):
+            if neighbour not in connected:
+                connected.add(neighbour)
+                pending.append(neighbour)
+    return [(owner, link) for owner, link in records if link.net_a in connected]
+
 
 def generate_regulator_name(input_ref_des: str, output_ref_des: str, output_rail_name: str = "") -> str:
     """

@@ -3,4 +3,6 @@ scipy
 shapely
 matplotlib
 kicad-python
-pypardiso
+wxPython
+threadpoolctl
+pyamg>=5.3,<6

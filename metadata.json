@@ -1,0 +1,22 @@
+{
+  "$schema": "https://go.kicad.org/pcm/schemas/v1",
+  "name": "Ki-PIDA (electrical fixes)",
+  "description": "DC voltage-drop and copper-loss analysis with experimental steady-state thermal estimates.",
+  "description_full": "Local testing build of Ki-PIDA with corrected electrical geometry, regulator loading, solver validation, CUDA acceleration and mesh convergence checks. Includes an experimental board-average thermal estimate from copper, series-component and regulator losses, with user-specified cooling and substrate conductivity. Current-density and component junction temperature models are not implemented. Uses KiCad's IPC API. Licensed under the GNU Affero General Public License version 3; see LICENSE. The open-source metadata category preserves compatibility with KiCad 9's schema, which has no AGPL entry.",
+  "identifier": "com.github.kbralten.kipida",
+  "type": "plugin",
+  "author": {
+    "name": "KiPIDA contributors",
+    "contact": {}
+  },
+  "license": "open-source",
+  "resources": {},
+  "versions": [
+    {
+      "version": "0.10.2",
+      "status": "testing",
+      "kicad_version": "9.0.1",
+      "runtime": "ipc"
+    }
+  ]
+}

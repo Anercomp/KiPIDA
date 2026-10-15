@@ -1,4 +1,5 @@
 import wx
+from ui.sorting import natural_key
 try:
     from models import generate_regulator_name
 except ImportError:
@@ -119,7 +120,7 @@ class RegulatorDialog(wx.Dialog):
     def _on_input_rail_change(self, event):
         rail = self.cmb_input_rail.GetValue()
         self.input_comps = self.discoverer.get_components_on_net(rail)
-        refs = sorted(self.input_comps.keys())
+        refs = sorted(self.input_comps.keys(), key=natural_key)
         self.cmb_input_comp.Set(refs)
         if refs:
             self.cmb_input_comp.SetSelection(0)
@@ -138,7 +139,7 @@ class RegulatorDialog(wx.Dialog):
     def _on_output_rail_change(self, event):
         rail = self.cmb_output_rail.GetValue()
         self.output_comps = self.discoverer.get_components_on_net(rail)
-        refs = sorted(self.output_comps.keys())
+        refs = sorted(self.output_comps.keys(), key=natural_key)
         self.cmb_output_comp.Set(refs)
         if refs:
             self.cmb_output_comp.SetSelection(0)

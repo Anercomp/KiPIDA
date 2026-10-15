@@ -95,26 +95,18 @@ class TestGeometryExtractor(unittest.TestCase):
         self.extractor = GeometryExtractor(self.board, debug=False, log_callback=None)
         
     def test_stackup_defaults(self):
+        from kipy.proto.board.board_types_pb2 import BoardLayer
         stackup = self.extractor.get_board_stackup()
-        self.assertIn('copper', stackup)
-        self.assertIn(0, stackup['copper']) # F_Cu
-        self.assertEqual(stackup['copper'][0]['thickness_mm'], 0.035)
+        self.assertEqual(stackup['layer_order'], [BoardLayer.BL_F_Cu, BoardLayer.BL_B_Cu])
+        self.assertEqual(stackup['copper'][BoardLayer.BL_F_Cu]['thickness_mm'], .035)
 
     def test_track_extraction(self):
-        # 0.5mm width track from 0,0 to 10mm,0
-        w = 500000 # 0.5mm in nm
-        start = (0,0)
-        end = (10000000, 0) # 10mm
-        
-        t = MockTrack(1, 0, start, end, w)
-        self.board.tracks.append(t)
-        
-        geo = self.extractor.get_net_geometry("TestNet")
-        
-        self.assertIn(0, geo)
-        poly = geo[0]
-        
-        self.assertAlmostEqual(poly.area, 5.0 + math.pi * (0.25**2), delta=0.01)
-
-if __name__ == '__main__':
-    unittest.main()
+        from types import SimpleNamespace as NS
+        from kipy.proto.board.board_types_pb2 import BoardLayer
+        lid = BoardLayer.BL_F_Cu
+        self.board.tracks.append(NS(net=NS(name='TestNet'), layer=lid,
+            start=NS(x=0, y=0), end=NS(x=10000000, y=0), width=500000))
+        geo = self.extractor.get_net_geometry('TestNet')
+        self.assertIn(lid, geo)
+        self.assertAlmostEqual(geo[lid].area, 5 + math.pi*.25**2, delta=.01)
+        self.assertAlmostEqual(geo[lid].bounds[3]-geo[lid].bounds[1], .5)

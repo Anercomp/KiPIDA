@@ -1,0 +1,42 @@
+[
+  {
+    "synthetic": true,
+    "area_mm2": 896.0,
+    "spacing_mm": 1,
+    "cells": 896,
+    "timings": {
+      "baseline": {
+        "grid_seconds": 0.01816149998921901,
+        "assembly_and_solve_seconds": 6.3005691000144,
+        "total_seconds": 6.318730600003619
+      },
+      "optimized": {
+        "grid_seconds": 0.0035820000048261136,
+        "assembly_and_solve_seconds": 0.04183000000193715,
+        "total_seconds": 0.045412000006763265
+      }
+    },
+    "speedup": 139.14231038189382,
+    "maximum_temperature_difference_c": 0.0
+  },
+  {
+    "synthetic": true,
+    "area_mm2": 896.0,
+    "spacing_mm": 0.5,
+    "cells": 3584,
+    "timings": {
+      "baseline": {
+        "grid_seconds": 0.06427839997923002,
+        "assembly_and_solve_seconds": 19.387833100015996,
+        "total_seconds": 19.452111499995226
+      },
+      "optimized": {
+        "grid_seconds": 0.012177500000689179,
+        "assembly_and_solve_seconds": 0.478757000004407,
+        "total_seconds": 0.4909345000050962
+      }
+    },
+    "speedup": 39.622620736153806,
+    "maximum_temperature_difference_c": 0.0
+  }
+]

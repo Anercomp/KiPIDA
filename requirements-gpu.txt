@@ -1,0 +1,2 @@
+# Optional CUDA backend. Install in the KiCad-managed plugin environment.
+cupy-cuda12x[ctk]==14.2.0

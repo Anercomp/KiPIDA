@@ -1,0 +1,20 @@
+{
+  "nodes": 262144,
+  "nonzeros": 1308672,
+  "cpu": {
+    "backend": "CPU CG",
+    "iterations": 2065,
+    "solve_seconds": 5.6513380000251345,
+    "backend_notes": []
+  },
+  "gpu": {
+    "backend": "CUDA CG",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti",
+    "iterations": 2065,
+    "solve_seconds": 1.9561524000018835,
+    "backend_notes": []
+  },
+  "maximum_voltage_difference_v": 7.127631818093505e-14,
+  "maximum_analytical_error_v": 3.671007942074311e-12,
+  "gpu_residual_a": 1.7330581414398694e-13
+}

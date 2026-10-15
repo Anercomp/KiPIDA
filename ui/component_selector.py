@@ -1,4 +1,5 @@
-﻿import wx
+import wx
+from ui.sorting import natural_key
 
 class ComponentSelectorDialog(wx.Dialog):
     def __init__(self, parent, title, net_name, components):
@@ -36,17 +37,18 @@ class ComponentSelectorDialog(wx.Dialog):
         self.lbl_instruction = wx.StaticText(panel, label="Select Component:")
         vbox.Add(self.lbl_instruction, 0, wx.ALL, 5)
         
-        self.lst_comps = wx.ListBox(panel, style=wx.LB_SINGLE | wx.LB_SORT)
+        self.lst_comps = wx.ListBox(panel, style=wx.LB_SINGLE)
         self.comp_map = {}
         
         # self.components is a dict { ref: [pad_objs] }
         if isinstance(self.components, dict):
-             for ref, pads in self.components.items():
+             for ref in sorted(self.components, key=natural_key):
+                 pads = self.components[ref]
                  self.lst_comps.Append(ref)
                  self.comp_map[ref] = pads
         else:
              # Fallback for list of objects (legacy)
-             for c in self.components:
+             for c in sorted(self.components, key=lambda c: natural_key(getattr(c, 'ref_des', str(c)))):
                  ref = getattr(c, 'ref_des', str(c))
                  self.lst_comps.Append(ref)
                  self.comp_map[ref] = c

@@ -1,3 +1,4 @@
+from copper_geometry import pad_geometry, polygon_from_api, drill_geometry
 import logging
 import math
 try:
@@ -96,6 +97,8 @@ class GeometryExtractor:
                     self._stackup_cache = stackup
                     return stackup
             except Exception as e:
+                if hasattr(self.board, 'get_stackup'):
+                    raise ValueError("Cannot read the board's physical stackup. Check the KiCad API connection and board setup.") from e
                 msg = f"Protobuf API stackup extraction failed: {e}. Falling back to defaults."
                 if self.debug:
                     self.logger.warning(msg)
@@ -192,6 +195,8 @@ class GeometryExtractor:
                 'substrate': substrates,
                 'resistivity': rho_copper
             }
+            if not copper_data:
+                raise ValueError("The board stackup contains no copper layers.")
             
             if self.debug:
                 self.logger.debug("Extracted Stackup Details:")
@@ -217,14 +222,18 @@ class GeometryExtractor:
     def _get_stackup_defaults(self):
         """Returns a default 2-layer stackup (Top/Bottom Copper, FR4 dielectric)."""
         msg = "Using hardcoded default stackup (2-Layer)."
-        if self.debug:
-            self.logger.warning(msg)
+        self.logger.warning(msg)
+        if self.log_callback:
+            self.log_callback(msg + " Verify the stackup before trusting results.")
 
         rho_copper = 1.68e-5 # Ohm-mm
         
         # Default to F.Cu (0) and B.Cu (31)
-        f_cu_id = 0
-        b_cu_id = 31
+        if HAS_KIPY:
+            from kipy.proto.board.board_types_pb2 import BoardLayer
+            f_cu_id, b_cu_id = BoardLayer.BL_F_Cu, BoardLayer.BL_B_Cu
+        else:
+            f_cu_id, b_cu_id = 0, 31
         
         copper_data = {
             f_cu_id: {'name': 'F.Cu', 'thickness_mm': 0.035},
@@ -252,9 +261,10 @@ class GeometryExtractor:
 
     def get_net_geometry(self, net_name):
         """
-        Extracts and merges geometry for a specific net.
+        Extracts and merges geometry for a specific net; None includes all nets.
         Returns a dictionary: { layer_id: shapely.geometry.Polygon }
         """
+        drill_voids = {}
         layer_shapes = {} # { layer_id: [shapely_objects] }
 
         def add_shape(layer, shape):
@@ -269,16 +279,14 @@ class GeometryExtractor:
         # 1. Process Tracks
         tracks = self._get_board_items('tracks')
         
-        # We might want to buffer tracks slightly more than half-width to ensure 
-        # grid points are caught if the track is very thin.
-        # A safety buffer of 0.1mm helps catch grid nodes.
-        safety_buffer = 0.05 
-        
+        # Preserve manufactured copper dimensions.
+        safety_buffer = 0.0
+
         for track in tracks:
             net = self._get_val(track, 'net')
             t_net_name = self._get_val(net, 'name', "")
             
-            if t_net_name != net_name:
+            if net_name is not None and t_net_name != net_name:
                 continue
                     
             start = self._get_val(track, 'start')
@@ -399,15 +407,19 @@ class GeometryExtractor:
             net = self._get_val(via, 'net')
             v_net_name = self._get_val(net, 'name', "")
             
-            if v_net_name != net_name:
+            if net_name is not None and v_net_name != net_name:
                 continue
                 
             pos = self._get_val(via, 'position')
             x_mm = to_mm(self._get_val(pos, 'x', 0))
             y_mm = to_mm(self._get_val(pos, 'y', 0))
             
-            width_mm = to_mm(self._get_val(via, 'width', 0.6*1e6))
-            poly = Point(x_mm, y_mm).buffer(width_mm / 2 + safety_buffer)
+            width_mm = to_mm(self._get_val(via, 'diameter', self._get_val(via, 'width', 0)))
+            drill_mm = to_mm(self._get_val(via, 'drill_diameter', 0))
+            if width_mm <= drill_mm or drill_mm <= 0:
+                raise ValueError("Via diameter/drill unavailable or invalid.")
+            hole = Point(x_mm, y_mm).buffer(drill_mm / 2)
+            poly = Point(x_mm, y_mm).buffer(width_mm / 2).difference(hole)
             
             # Vias exist on all layers in their pair (usually through-all)
             layers = self._get_val(via, 'layers')
@@ -429,113 +441,22 @@ class GeometryExtractor:
             
             for lid in layers:
                 if is_copper(lid):
+                    drill_voids.setdefault(lid, []).append(hole)
                     add_shape(lid, poly)
                     
-        # 2. Process Pads (Footprints)
-        footprints = self._get_board_items('footprints')
-        for fp in footprints:
+        # 2. Authoritative board-coordinate pad copper from the IPC API.
+        for fp in self._get_board_items('footprints'):
             pads = self._get_val(fp, 'pads')
-            is_def_pads = False
-            
             if pads is None:
-                defn = self._get_val(fp, 'definition')
-                pads = self._get_val(defn, 'pads', [])
-                is_def_pads = True
-                
-            # Get footprint transforms if needed
-            fp_x, fp_y, fp_rot = 0, 0, 0
-            if is_def_pads:
-                fp_pos = self._get_val(fp, 'position')
-                fp_x = to_mm(self._get_val(fp_pos, 'x', 0))
-                fp_y = to_mm(self._get_val(fp_pos, 'y', 0))
-                fp_rot = self._get_val(fp, 'orientation', 0)
-                # Ensure float
-                try: fp_rot = float(fp_rot)
-                except: fp_rot = 0.0
-
+                pads = self._get_val(self._get_val(fp, 'definition'), 'pads', [])
             for pad in pads:
-                net = self._get_val(pad, 'net')
-                p_net_name = self._get_val(net, 'name', "")
-                    
-                if p_net_name != net_name:
+                if net_name is not None and self._get_val(self._get_val(pad, 'net'), 'name', '') != net_name:
                     continue
-                            
-                # Geometry
-                # Position (Absolute)
-                pos = self._get_val(pad, 'position')
-                x_mm = to_mm(self._get_val(pos, 'x', 0))
-                y_mm = to_mm(self._get_val(pos, 'y', 0))
-                
-                # Size & Shape
-                w_mm = 0
-                h_mm = 0
-                shape_type = 0 # 0=Circle, 1=Rect, 2=RoundRect/Oval? Need verification.
-                
-                # Try direct size first
-                size = self._get_val(pad, 'size')
-                if size:
-                    w_mm = to_mm(self._get_val(size, 'x', 0))
-                    h_mm = to_mm(self._get_val(size, 'y', 0))
-                    shape_type = self._get_val(pad, 'shape', 1)
-                
-                # Fallback to padstack
-                if w_mm == 0:
-                    ps = self._get_val(pad, 'padstack')
-                    if ps:
-                        cls = self._get_val(ps, 'copper_layers', [])
-                        if cls and len(cls) > 0:
-                            l0 = cls[0]
-                            sz = self._get_val(l0, 'size')
-                            w_mm = to_mm(self._get_val(sz, 'x', 0))
-                            h_mm = to_mm(self._get_val(sz, 'y', 0))
-                            shape_type = self._get_val(l0, 'shape', 1)
-
-                if w_mm == 0: w_mm = 1.0
-                if h_mm == 0: h_mm = 1.0
-
-                # Rotation
-                pad_rot = self._get_val(pad, 'rotation', 0)
-                if pad_rot == 0:
-                     ps = self._get_val(pad, 'padstack')
-                     pad_rot = self._get_val(ps, 'angle', 0)
-                try: pad_rot = float(pad_rot)
-                except: pad_rot = 0.0
-                
-                # Create Shape
-                # Shape types (Empirical/Guess based on kipy enum): 
-                # PSS_CIRCLE = 0, PSS_RECT = 1, PSS_ROUNDRECT = 2, PSS_OVAL = 3
-                # For now, treat Circle as Circle, everything else as Box/Rect
-                # If only one dimension is relevant for circle, usually x==y
-                
-                # Note: 'shape' attribute value 2 seen in inspection for Rect/RoundRect pads
-                
-                pad_poly = None
-                
-                if str(shape_type) == 'PSS_CIRCLE' or shape_type == 0:
-                     # Circle
-                     pad_poly = Point(x_mm, y_mm).buffer(w_mm / 2)
-                else:
-                    # Rectangle / Oval / RoundRect
-                    minx, miny = -w_mm/2, -h_mm/2
-                    maxx, maxy = w_mm/2, h_mm/2
-                    base_box = box(minx, miny, maxx, maxy)
-                    rotated_shape = affinity.rotate(base_box, -pad_rot, origin=(0,0))
-                    pad_poly = affinity.translate(rotated_shape, x_mm, y_mm)
-                
-                # Layers
-                layers = self._get_val(pad, 'layers')
-                if not layers:
-                    ps = self._get_val(pad, 'padstack')
-                    if ps:
-                        layers = self._get_val(ps, 'layers')
-                        if not layers:
-                             layers = self._get_val(ps, 'copper_layers')
-
-                if not layers: layers = []
-                
-                for lid in layers:
-                   if is_copper(lid):
-                       add_shape(lid, pad_poly)
+                if self._get_val(pad, 'pad_type') == 1:
+                    for lid in self.get_board_stackup()['copper']:
+                        drill_voids.setdefault(lid, []).append(drill_geometry(pad))
+                for lid, shape in pad_geometry(self.board, pad, self.get_board_stackup()['copper']).items():
+                    add_shape(lid, shape)
 
         # 3. Process Zones
         zones = self._get_board_items('zones')
@@ -543,7 +464,7 @@ class GeometryExtractor:
             net = self._get_val(zone, 'net')
             z_net_name = self._get_val(net, 'name', "")
             
-            if z_net_name != net_name:
+            if net_name is not None and z_net_name != net_name:
                 continue
                 
             # Filled Polygons (dict mapping layer_id -> list of polygon objects)
@@ -559,52 +480,12 @@ class GeometryExtractor:
                         poly_list = [poly_list]
                         
                     for poly_obj in poly_list:
-                        pts = []
-                        
-                        # Get outline from polygon object
-                        outline = self._get_val(poly_obj, 'outline')
-                        if outline:
-                            # Try 'nodes' first (PolyLine has nodes), fallback to 'points'
-                            points_list = self._get_val(outline, 'nodes')
-                            if not points_list:
-                                points_list = self._get_val(outline, 'points', [])
-                                
-                            for node in points_list:
-                                # Each node might be PolyLineNode or just have 'point'
-                                point = self._get_val(node, 'point')
-                                if point:
-                                    x = self._get_val(point, 'x', 0)
-                                    y = self._get_val(point, 'y', 0)
-                                    pts.append((to_mm(x), to_mm(y)))
-                        
-                        if len(pts) >= 3:
-                            p = Polygon(pts)
-                            if not p.is_valid: 
-                                p = p.buffer(0)
-                            
-                            # Handle holes if present
-                            holes_data = self._get_val(poly_obj, 'holes', [])
-                            if holes_data:
-                                for hole_outline in holes_data:
-                                    h_pts = []
-                                    # Try 'nodes' then 'points'
-                                    h_points_list = self._get_val(hole_outline, 'nodes')
-                                    if not h_points_list:
-                                        h_points_list = self._get_val(hole_outline, 'points', [])
-                                        
-                                    for h_node in h_points_list:
-                                        h_point = self._get_val(h_node, 'point')
-                                        if h_point:
-                                            h_pts.append((to_mm(self._get_val(h_point, 'x', 0)), 
-                                                         to_mm(self._get_val(h_point, 'y', 0))))
-                                    
-                                    if len(h_pts) >= 3:
-                                        hole_poly = Polygon(h_pts)
-                                        if hole_poly.is_valid:
-                                            p = p.difference(hole_poly)
-                            
-                            if p.is_valid and not p.is_empty:
-                                add_shape(layer_id, p)
+                        try:
+                            p = polygon_from_api(poly_obj)
+                        except ValueError as exc:
+                            raise ValueError(f"Filled zone on net {net_name}, layer {layer_id}: {exc}") from exc
+                        if not p.is_empty:
+                            add_shape(layer_id, p)
 
         # 4. Merge
         merged_geometry = {}
@@ -612,9 +493,16 @@ class GeometryExtractor:
             if not shapes:
                 continue
             merged = unary_union(shapes)
+            # Filled zones may include a drilled location; the physical hole remains empty.
+            if drill_voids.get(layer):
+                merged = merged.difference(unary_union(drill_voids[layer]))
             merged_geometry[layer] = merged
             
         return merged_geometry
+
+    def get_board_copper_geometry(self):
+        """All-net copper for visual overlays, without an electrical solve."""
+        return self.get_net_geometry(None)
 
     def plot_geometry(self, geometry_by_layer):
         """Visualize the extracted geometry as a 2D plot."""

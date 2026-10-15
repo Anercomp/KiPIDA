@@ -1,13 +1,14 @@
 import json
+from dataclasses import asdict
 from typing import List
 from pathlib import Path
 
 try:
-    from .models import PowerRail, UnifiedSource, UnifiedLoad, VoltageRegulator, ComponentRef
+    from .models import PowerRail, UnifiedSource, UnifiedLoad, VoltageRegulator, ComponentRef, SeriesComponent
 except (ImportError, ValueError):
-    from models import PowerRail, UnifiedSource, UnifiedLoad, VoltageRegulator, ComponentRef
+    from models import PowerRail, UnifiedSource, UnifiedLoad, VoltageRegulator, ComponentRef, SeriesComponent
 
-CONFIG_VERSION = "1.0"
+CONFIG_VERSION = "1.1"
 
 def save_config(rails: List[PowerRail], filepath: str):
     """
@@ -22,7 +23,7 @@ def save_config(rails: List[PowerRail], filepath: str):
         "rails": [_rail_to_dict(rail) for rail in rails]
     }
     
-    with open(filepath, 'w') as f:
+    with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2)
 
 def load_config(filepath: str) -> List[PowerRail]:
@@ -42,12 +43,12 @@ def load_config(filepath: str) -> List[PowerRail]:
     if not Path(filepath).exists():
         raise FileNotFoundError(f"Config file not found: {filepath}")
     
-    with open(filepath, 'r') as f:
+    with open(filepath, 'r', encoding='utf-8-sig') as f:
         config = json.load(f)
     
     # Validate version
     version = config.get("version", "unknown")
-    if version != CONFIG_VERSION:
+    if version not in ("1.0", CONFIG_VERSION):
         raise ValueError(f"Unsupported config version: {version}")
     
     # Deserialize rails
@@ -61,7 +62,8 @@ def _rail_to_dict(rail: PowerRail) -> dict:
         "nominal_voltage": rail.nominal_voltage,
         "sources": [_source_to_dict(src) for src in rail.sources],
         "loads": [_load_to_dict(load) for load in rail.loads],
-        "child_regulators": [_regulator_to_dict(reg) for reg in rail.child_regulators]
+        "child_regulators": [_regulator_to_dict(reg) for reg in rail.child_regulators],
+        "series_components": [asdict(link) for link in rail.series_components]
     }
 
 def _dict_to_rail(data: dict) -> PowerRail:
@@ -72,6 +74,7 @@ def _dict_to_rail(data: dict) -> PowerRail:
     )
     
     # Deserialize sources
+    rail.series_components = [SeriesComponent(**link) for link in data.get("series_components", [])]
     for src_dict in data.get("sources", []):
         rail.sources.append(_dict_to_source(src_dict))
     

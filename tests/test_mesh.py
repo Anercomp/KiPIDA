@@ -109,28 +109,16 @@ class TestMesher(unittest.TestCase):
         self.assertTrue(len(mesh.G_coo_data) > 0)
         
     def test_vertical_link_via(self):
-        # 2 layers, node at 0,0 on both
-        poly = Polygon([(-1,-1), (1,-1), (1,1), (-1,1)]) # Small square at origin
-        geo = {0: poly, 31: poly}
-        stackup = {
-            'copper': {0: {}, 31: {}},
-            'resistivity': 1.7e-5,
-            'substrate': []
-        }
-        
-        # Add Via at 0,0
-        via = MockTrack(1, 0, MockPoint(0,0), 300000, "PCB_VIA")
-        self.board.tracks.append(via)
-        
-        mesh = self.mesher.generate_mesh("Test", geo, stackup, grid_size_mm=0.5)
-        
-        # Check that we added vertical connections to the sparse matrix
-        # Vertical conductance is usually large (short) or specific value
-        # We can just check that G_coo_data grew
-        self.assertTrue(len(mesh.G_coo_data) > 0)
-        
-        # Optionally check that we have some very large values (vertical shorts)
-        # self.assertTrue(any(g > 100 for g in mesh.G_coo_data))
-
-if __name__ == '__main__':
-    unittest.main()
+        from types import SimpleNamespace as NS
+        from scipy.sparse import coo_matrix
+        board = NS(vias=[NS(net=NS(name='Test'), position=NS(x=0, y=0),
+                     diameter=600000, drill_diameter=300000, padstack=NS(layers=[0,31]))], footprints=[])
+        poly = Polygon([(-1,-1), (1,-1), (1,1), (-1,1)])
+        stackup = {'copper': {0: {'thickness_mm': .035}, 31: {'thickness_mm': .035}},
+                   'layer_order': [0,31], 'resistivity': 1.68e-5,
+                   'substrate': [{'between': [0,31], 'thickness_mm': 1.6}]}
+        mesh = Mesher(board).generate_mesh('Test', {0: poly, 31: poly}, stackup, .1)
+        g = coo_matrix((mesh.G_coo_data, (mesh.G_coo_row, mesh.G_coo_col))).tocsr().tocoo()
+        cross = [(u,v) for u,v,val in zip(g.row,g.col,g.data)
+                 if u < v and val < 0 and mesh.node_coords[u][2] != mesh.node_coords[v][2]]
+        self.assertGreater(len(cross), 4)

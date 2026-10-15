@@ -1,0 +1,8 @@
+{
+  "net": "GND",
+  "spacing_mm": 0.1,
+  "candidate_grid_points": 5889624,
+  "nodes": 3439501,
+  "coo_entries": 27111624,
+  "mesh_seconds": 82.74661030000425
+}
